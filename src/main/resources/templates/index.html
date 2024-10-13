@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpringBoot Application with Razorpay Gateway</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f7f9fc;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+
+        .card-header h2 {
+            font-weight: 600;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .form-control {
+            border: 2px solid #ced4da;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: none;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+            font-weight: bold;
+            font-size: 18px;
+            padding: 12px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        .card-body {
+            padding: 30px;
+        }
+
+        .form-control::placeholder {
+            font-size: 14px;
+            color: #adb5bd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h2>SpringBoot Application with Razorpay Gateway</h2>
+                </div>
+                <div class="card-body">
+                    <form id="paymentForm">
+                        <div class="mb-4">
+                            <label for="studentName" class="form-label">Student Name</label>
+                            <input type="text" class="form-control" id="studentName" name="studentName" placeholder="Enter your name" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="courseName" class="form-label">Course Name</label>
+                            <select class="form-control" id="courseName" name="courseName" required>
+                                <option value="" disabled selected>Select your course</option>
+                                <option value="Java">Java</option>
+                                <option value="Python">Python</option>
+                                <option value="JavaScript">JavaScript</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="mobile" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="Enter your phone number" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="amount" class="form-label">Amount</label>
+                            <input type="number" class="form-control" id="amount" name="amount" placeholder="Enter amount" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">Proceed to Pay</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript to handle form submission -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    document.getElementById('paymentForm').addEventListener('submit', function(event) {
+        event.preventDefault();  // Prevent the default form submission
+
+        // Collect the form data
+        const formData = {
+            studentName: document.getElementById('studentName').value,
+            courseName: document.getElementById('courseName').value,
+            email: document.getElementById('email').value,
+            mobile: document.getElementById('phoneNumber').value,
+            amount: document.getElementById('amount').value
+        };
+
+        // Send the form data as JSON using Fetch API
+        fetch('/create-payment-link', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+
+                // Initialize the Razorpay checkout form
+                var options = {
+                    key: data.key,
+                    amount: data.amount,
+                    currency: data.currency,
+                    name: 'SpringBoot Application',
+                    description: 'Course Payment',
+                    callback_url:"http://localhost:8080/handle-payment-callback",
+                    order_id: data.razorPayOrderId,
+
+                    prefill: {
+                        name: data.studentName,
+                        email: data.email,
+                        contact: data.mobile
+                    },
+                    theme: {
+                        color: '#007bff'
+                    }
+                };
+
+                var rzp1 = new Razorpay(options);
+                rzp1.open();
+            })
+            .catch(error => console.error('Error:', error));
+    });
+</script>
+
+<!-- Bootstrap JS and dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+
+</body>
+</html>
